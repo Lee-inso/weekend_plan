@@ -43,6 +43,13 @@ def inject_styles() -> None:
             padding-bottom: 3rem;
             max-width: 1180px;
         }
+        .stApp {
+            overflow-x: hidden;
+        }
+        p, li, div, span {
+            overflow-wrap: anywhere;
+            word-break: normal;
+        }
         [data-testid="stSidebar"] {
             background: linear-gradient(180deg, rgba(32, 83, 64, 0.16), rgba(65, 105, 130, 0.08));
         }
@@ -65,6 +72,31 @@ def inject_styles() -> None:
             margin-bottom: 1.2rem;
             box-shadow: 0 18px 48px rgba(0, 0, 0, 0.08);
         }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.85rem;
+            margin-bottom: 1rem;
+        }
+        .metric-card {
+            border: 1px solid rgba(128, 128, 128, 0.18);
+            border-radius: 0.95rem;
+            padding: 0.85rem 1rem;
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+            min-width: 0;
+        }
+        .metric-label {
+            color: rgba(128, 128, 128, 0.95);
+            font-size: 0.82rem;
+            font-weight: 650;
+            margin-bottom: 0.25rem;
+        }
+        .metric-value {
+            font-size: 1.15rem;
+            font-weight: 760;
+            line-height: 1.35;
+        }
         .hero-kicker {
             display: inline-block;
             padding: 0.25rem 0.7rem;
@@ -84,6 +116,12 @@ def inject_styles() -> None:
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(128, 128, 128, 0.05));
             margin: 0.55rem 0;
             box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.85rem;
+            margin: 0.4rem 0 1rem;
         }
         .card-label {
             color: rgba(128, 128, 128, 0.98);
@@ -140,9 +178,61 @@ def inject_styles() -> None:
             background: rgba(196, 127, 46, 0.08);
             margin-bottom: 0.55rem;
         }
+        .mobile-card {
+            padding: 0.9rem 1rem;
+            border: 1px solid rgba(128, 128, 128, 0.16);
+            border-radius: 0.9rem;
+            background: rgba(128, 128, 128, 0.055);
+            margin-bottom: 0.65rem;
+        }
         .small-muted {
             color: rgba(128, 128, 128, 0.95);
             font-size: 0.92rem;
+        }
+        @media (max-width: 760px) {
+            .block-container {
+                padding: 1rem 0.8rem 2rem;
+            }
+            .hero-card {
+                padding: 1.25rem 1rem;
+                border-radius: 1.1rem;
+                margin-bottom: 0.9rem;
+            }
+            .hero-card h1 {
+                font-size: 1.85rem !important;
+                line-height: 1.18 !important;
+            }
+            .hero-card p {
+                font-size: 0.98rem !important;
+                line-height: 1.6 !important;
+            }
+            .metric-grid,
+            .card-grid {
+                grid-template-columns: 1fr;
+                gap: 0.65rem;
+            }
+            .soft-card {
+                min-height: auto;
+                padding: 0.9rem 0.95rem;
+            }
+            .time-row {
+                grid-template-columns: 1fr;
+                gap: 0.55rem;
+                padding: 0.85rem 0.9rem;
+            }
+            .time-pill {
+                width: auto;
+                text-align: left;
+            }
+            .section-title h2 {
+                font-size: 1.35rem !important;
+                line-height: 1.25 !important;
+            }
+            [data-testid="stTabs"] button {
+                padding-left: 0.55rem;
+                padding-right: 0.55rem;
+                font-size: 0.88rem;
+            }
         }
         </style>
         """,
@@ -170,6 +260,15 @@ def info_card(label: str, value: str, detail: str = "") -> str:
             <div class="card-label">{escape(label)}</div>
             <div class="card-value">{escape(value)}</div>
             {detail_html}
+        </div>
+    """
+
+
+def metric_card(label: str, value: str) -> str:
+    return f"""
+        <div class="metric-card">
+            <div class="metric-label">{escape(label)}</div>
+            <div class="metric-value">{escape(value)}</div>
         </div>
     """
 
@@ -208,11 +307,13 @@ def render_header(config: dict[str, Any]) -> None:
         unsafe_allow_html=True,
     )
 
-    col_people, col_cars, col_return, col_review = st.columns(4)
-    col_people.metric("人数", f"{trip.get('people', '待填')} 人")
-    col_cars.metric("车辆", f"{trip.get('cars', '待填')} 车")
-    col_return.metric("返程", trip.get("return_target", "待确认"))
-    col_review.metric("天气复核", get_config(config, "weather.review_time", "待确认"))
+    metrics = [
+        metric_card("人数", f"{trip.get('people', '待填')} 人"),
+        metric_card("车辆", f"{trip.get('cars', '待填')} 车"),
+        metric_card("返程", trip.get("return_target", "待确认")),
+        metric_card("天气复核", get_config(config, "weather.review_time", "待确认")),
+    ]
+    st.markdown(f'<div class="metric-grid">{"".join(metrics)}</div>', unsafe_allow_html=True)
 
 
 def render_overview(config: dict[str, Any]) -> None:
@@ -225,29 +326,25 @@ def render_overview(config: dict[str, Any]) -> None:
         "第一天北灵山/韭菜坡徒步和下厨，第二天鸡鸣驿古城半日游后返津。"
     )
 
-    cols = st.columns(3)
-    cols[0].markdown(
+    overview_cards = [
         info_card(
             "第一段车程",
             f"{routes.get('day1_drive', {}).get('from', '待确认')} -> {routes.get('day1_drive', {}).get('to', '待确认')}",
             routes.get("day1_drive", {}).get("planned_time", ""),
         ),
-        unsafe_allow_html=True,
-    )
-    cols[1].markdown(
         info_card(
             "徒步强度",
             f"{routes.get('hike', {}).get('distance', '待确认')} · {routes.get('hike', {}).get('elevation_gain', '待确认')}",
             f"硬回撤：{routes.get('hike', {}).get('hard_turnaround_time', '待确认')}",
         ),
-        unsafe_allow_html=True,
-    )
-    cols[2].markdown(
         info_card(
             "第二天",
             routes.get("day2_drive", {}).get("to", "待确认"),
             routes.get("day2_drive", {}).get("return", ""),
         ),
+    ]
+    st.markdown(
+        f'<div class="card-grid">{"".join(overview_cards)}</div>',
         unsafe_allow_html=True,
     )
 
@@ -322,9 +419,8 @@ def render_lodging(config: dict[str, Any]) -> None:
     for index, candidate in enumerate(lodging.get("candidates", [])):
         with st.container(border=True):
             st.markdown(f"##### {candidate.get('name', '候选住宿')}")
-            col_area, col_phone = st.columns([2, 1])
-            col_area.write(f"区域：{candidate.get('area', '待确认')}")
-            col_phone.write(f"电话：{candidate.get('phone', '待确认')}")
+            st.markdown(f"**区域：** {candidate.get('area', '待确认')}")
+            st.markdown(f"**电话：** {candidate.get('phone', '待确认')}")
             st.write(f"选择理由：{candidate.get('why', '待确认')}")
             with st.expander("电话确认事项"):
                 render_checklist(candidate.get("verify", []), f"lodging_verify_{index}")
@@ -350,7 +446,19 @@ def render_cars(config: dict[str, Any]) -> None:
 
     cars = car_plan.get("template", [])
     if cars:
-        st.table(cars)
+        for car in cars:
+            st.markdown(
+                f"""
+                <div class="mobile-card">
+                    <strong>{escape(car.get("car", "车辆"))}</strong><br>
+                    司机：{escape(car.get("driver", "待填"))}<br>
+                    副驾：{escape(car.get("copilot", "待填"))}<br>
+                    乘员：{escape(car.get("passenger", "待填"))}<br>
+                    接送区域：{escape(car.get("pickup_area", "待填"))}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
     st.markdown("#### 角色分工")
     render_list(car_plan.get("roles", []))
