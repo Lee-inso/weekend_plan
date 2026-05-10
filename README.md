@@ -27,8 +27,8 @@ uv run python scripts/render_plan.py
 ## 文件说明
 
 - `app.py`：Streamlit 网页入口，展示总览、时间轴、天气决策、住宿、装备采购、车辆分工和最终确认。
-- `data/trip_config.json`：日期、路线、住宿候选、天气降级规则、分工和采购清单。
+- `trip_config.json`：日期、路线、住宿候选、天气降级规则、分工和采购清单。
 - `notebooklm_ppt_brief.md`：面向 NotebookLM/PPT 生成的结构化资料包。
 - `scripts/render_plan.py`：用 Python 标准库渲染 Markdown，不依赖第三方包。
 
-出发前一天重点更新 `data/trip_config.json` 里的天气、住宿和车辆分组。网页会在刷新后读取最新配置；如需同步 Markdown 文档，再重新运行生成命令。
+出发前一天重点更新根目录 `trip_config.json` 里的天气、住宿和车辆分组。网页会在刷新后读取最新配置；如需同步 Markdown 文档，再重新运行生成命令。
